@@ -1,6 +1,6 @@
 # ARXIV-DAILY
 
-一个自动化机器人，每天抓取 "Gaussian Splatting" 和 "Remote Sensing" 的最新论文，利用 **硅基流动 (SiliconFlow)** 的 API 生成中文摘要，并更新到 Markdown 文档。同时提供现代化的 **PyQt6 桌面 GUI**，方便交互式浏览和配置。
+一个自动化机器人，每天抓取 "Gaussian Splatting" 和 "Remote Sensing" 的最新论文，利用 **硅基流动 (SiliconFlow)等OpenAI API兼容的** 的 API 生成中文摘要，并更新到 Markdown 文档。同时提供现代化的 **PyQt6 桌面 GUI**，方便交互式浏览和配置。
 
 ## 功能
 
@@ -46,8 +46,8 @@
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/your-username/Arxiv-Daily-3DGS.git
-cd Arxiv-Daily-3DGS
+git clone https://github.com/Vynje/Arxiv-Daily.git
+cd Arxiv-Daily
 ```
 
 ### 2. 安装依赖
@@ -69,7 +69,7 @@ export SILICONFLOW_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 ### 4. 使用 CLI（命令行）
 
 ```bash
-python main.py
+python3 main.py
 ```
 
 程序将抓取论文、生成摘要，并在 `reports/YYYY-MM-DD.md` 中生成当日报告。
@@ -91,7 +91,7 @@ GUI 启动后，你可以：
 
 ### 默认配置
 
-项目不再使用 `config.py`。所有配置均通过 `config.json` 管理。首次启动 GUI 时会自动生成 `config.json`，其中包含默认值。
+所有配置均通过 `config.json` 管理。首次启动 GUI 时会自动生成 `config.json`，其中包含默认值。
 
 ### GUI 设置对话框
 
@@ -141,8 +141,5 @@ GUI 启动后，你可以：
 - 如果 API 调用失败，程序会跳过该论文并继续处理。
 - Remote Sensing 论文过滤规则可在 `scraper.py` 中调整。
 - GUI 依赖 PyQt6，确保已安装（通过 requirements.txt 安装）。
-- 报告文件默认保存在 `reports/` 目录，按日期归档。旧的 `Daily_Report.md` 不再自动更新，可手动删除。
 
-## 许可证
 
-MIT
