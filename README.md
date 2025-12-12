@@ -1,6 +1,20 @@
 # ARXIV-DAILY
+> **"Let LLM read papers for you."** > 一个为了应对导师 Push、拯救发际线而写的论文速递机器人。
 
-一个自动化机器人，每天抓取 "Gaussian Splatting" 和 "Remote Sensing" 的最新论文，利用 **硅基流动 (SiliconFlow)等OpenAI API兼容的** 的 API 生成中文摘要，并更新到 Markdown 文档。同时提供现代化的 **PyQt6 桌面 GUI**，方便交互式浏览和配置。
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![DeepSeek](https://img.shields.io/badge/AI-LLM%20-purple) ![License](https://img.shields.io/badge/License-GNU-green)
+
+---一个自动化机器人，每天抓取设定好的关键词的最新论文，利用 **硅基流动 (SiliconFlow)等OpenAI API兼容的** 的 API 生成中文摘要，并更新到 Markdown 文档。同时提供现代化的 **PyQt6 桌面 GUI**，方便交互式浏览和配置。
+
+做这个项目的初衷其实特别简单：
+**我经常在组会前被导师问：“最近有什么新论文啊？有没有关注最新的 Gaussian Splatting 进展？”**
+
+说实话，每天手动刷 Arxiv 真的很累，而且摘要全是英文，扫一眼过去很难抓住重点。有时候代码敲嗨了，好几天没看论文，组会就尴尬了。
+
+于是我想：**为什么不让 AI 帮我把这些事做了？**
+
+不过呢做这个的主要原因还是最近学了相关知识，打算练练手。它不仅能每天自动把最新的论文总结好推给我，我还给它做了一个像 VSCode 一样的界面，方便我假装很认真地在“研读”文献 😂。
+
+如果你也面临同样的科研压力，或者只是想找个 Python 练手项目，希望这个小工具能帮到你！
 
 ## 功能
 
@@ -33,9 +47,6 @@
 ├── gui_chat.py            # 右侧 AI 聊天组件
 ├── requirements.txt       # Python 依赖
 ├── README.md              # 本文件
-├── plans/                 # 设计文档
-│   ├── design.md
-│   └── gui_design.md
 ├── reports/               # 历史报告目录（按日期归档）
 │   └── 2025-12-12.md
 └── .github/workflows/daily.yml  # GitHub Actions 工作流
