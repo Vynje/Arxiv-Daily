@@ -1,9 +1,9 @@
 # ARXIV-DAILY
 > **"Let LLM read papers for you."** > 一个为了应对导师 Push、拯救发际线而写的论文速递机器人。
 
-![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![DeepSeek](https://img.shields.io/badge/AI-LLM%20-purple) ![License](https://img.shields.io/badge/License-GNU-green)
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![DeepSeek](https://img.shields.io/badge/AI-LLM%20-purple) ![License](https://img.shields.io/badge/License-GPL3.0-green)
 
----一个自动化机器人，每天抓取设定好的关键词的最新论文，利用 **硅基流动 (SiliconFlow)等OpenAI API兼容的** 的 API 生成中文摘要，并更新到 Markdown 文档。同时提供现代化的 **PyQt6 桌面 GUI**，方便交互式浏览和配置。
+一个自动化机器人，每天抓取设定好的关键词的最新论文，利用 **硅基流动 (SiliconFlow)等OpenAI API兼容的** 的 API 生成中文摘要，并更新到 Markdown 文档。同时提供现代化的 **PyQt6 桌面 GUI**，方便交互式浏览和配置。
 
 做这个项目的初衷其实特别简单：
 **我经常在组会前被导师问：“最近有什么新论文啊？有没有关注最新的 Gaussian Splatting 进展？”**
