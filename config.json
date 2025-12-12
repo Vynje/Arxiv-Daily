@@ -1,0 +1,21 @@
+{
+  "BASE_URL": "https://api.siliconflow.cn/v1",
+  "MODEL_ID": "deepseek-ai/DeepSeek-V3.2",
+  "API_KEY": "sk-nhoxqrnkfvzckxtqklkrlodfvognvuzdtvejupcaaiigpeyg",
+  "SYSTEM_PROMPT": "",
+  "KEYWORDS": [
+    "Gaussian Splatting",
+    "Remote Sensing"
+  ],
+  "FILTER_DAYS": 1,
+  "REMOTE_SENSING_KEYWORDS": [
+    "Deep Learning",
+    "Neural",
+    "AI",
+    "Machine Learning",
+    "Artificial Intelligence"
+  ],
+  "OUTPUT_FILE": "Daily_Report.md",
+  "MAX_RETRIES": 3,
+  "RETRY_DELAY": 2
+}
