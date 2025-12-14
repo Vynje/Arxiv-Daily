@@ -1,21 +1,51 @@
 {
   "BASE_URL": "https://api.siliconflow.cn/v1",
   "MODEL_ID": "deepseek-ai/DeepSeek-V3.2",
-  "API_KEY": "sk-nhoxqrnkfvzckxtqklkrlodfvognvuzdtvejupcaaiigpeyg",
-  "SYSTEM_PROMPT": "",
+  "API_KEY": "sk-ashblpgqnkvdtuuzlkpwmnnybbffvaugtwlshqsydmjmeqgg",
+  "SYSTEM_PROMPT": "你是一个科研助手。请阅读摘要，用中文总结。输出格式：\n**创新点**：...\n**方法**：...\n**结论**：...\n请确保输出清晰、简洁，每部分用换行分隔。",
   "KEYWORDS": [
     "Gaussian Splatting",
     "Remote Sensing"
   ],
   "FILTER_DAYS": 1,
-  "REMOTE_SENSING_KEYWORDS": [
+  "ADDITIONAL_KEYWORDS": [
+    "Deep Learning",
+    "Neural",
+    "AI",
+    "Machine Learning",
+    "Artificial Intelligence",
+    "Computer Vision",
+    "Remote Sensing"
+  ],
+  "BLACKLIST_KEYWORDS": [],
+  "OUTPUT_FILE": "Daily_Report.md",
+  "MAX_RETRIES": 3,
+  "RETRY_DELAY": 2,
+  "DAILY_PUSH_FILTER_DAYS": 1,
+  "DAILY_PUSH_KEYWORDS": [
+    "Gaussian Splatting",
+    "Remote Sensing"
+  ],
+  "DAILY_PUSH_ADDITIONAL_KEYWORDS": [
     "Deep Learning",
     "Neural",
     "AI",
     "Machine Learning",
     "Artificial Intelligence"
   ],
-  "OUTPUT_FILE": "Daily_Report.md",
-  "MAX_RETRIES": 3,
-  "RETRY_DELAY": 2
+  "DAILY_PUSH_BLACKLIST_KEYWORDS": [],
+  "DAILY_PUSH_TIMEZONE": "Asia/Shanghai",
+  "DAILY_PUSH_TIME": "09:00",
+  "USER_SEARCH_FILTER_DAYS": 1,
+  "USER_SEARCH_KEYWORDS": [],
+  "USER_SEARCH_ADDITIONAL_KEYWORDS": [
+    "Deep Learning",
+    "Neural",
+    "AI",
+    "Machine Learning",
+    "Artificial Intelligence"
+  ],
+  "USER_SEARCH_BLACKLIST_KEYWORDS": [],
+  "USER_SEARCH_START_DATE": "2025-12-11",
+  "USER_SEARCH_END_DATE": "2025-12-13"
 }

@@ -13,7 +13,9 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 import scraper
 import summarizer
-import gui_config
+import config
+import report_generator
+from pathlib import Path
 
 
 class RefreshWorker(QThread):
@@ -45,13 +47,10 @@ class RefreshWorker(QThread):
 
             # 步骤1：爬取论文
             self.progress.emit("正在爬取 arXiv 论文...")
-            self.papers = scraper.scrape_all()
-            if not self.papers:
-                self.progress.emit("未找到新论文。")
-                self.progress_percent.emit(100)
-                self.finished.emit("")  # 空路径表示无新内容
-                return
+            self.papers = scraper.scrape_all("DAILY_PUSH_")
             self.progress_percent.emit(30)
+            if not self.papers:
+                self.progress.emit("未找到新论文，将生成空报告。")
 
             # 步骤2：生成摘要
             total = len(self.papers)
@@ -67,12 +66,24 @@ class RefreshWorker(QThread):
             self.papers = summarizer.batch_summarize(self.papers)
             self.progress_percent.emit(70)
 
-            # 步骤3：保存报告
-            self.progress.emit("正在保存报告...")
-            report_path = self._save_reports()
-            self.progress_percent.emit(100)
-            self.progress.emit("任务完成！")
-            self.finished.emit(report_path)
+            # 步骤3：决定是否保存报告
+            today = datetime.date.today().isoformat()
+            date_file = f"reports/{today}.md"
+            report_exists = os.path.exists(date_file)
+
+            # 如果论文为空且报告已存在，则发送空路径（让 GUI 询问是否覆盖）
+            if not self.papers and report_exists:
+                self.progress.emit("未找到新论文，且今日报告已存在。")
+                self.progress_percent.emit(100)
+                self.progress.emit("任务完成！")
+                self.finished.emit("")  # 空路径表示无新内容
+            else:
+                # 否则保存报告（覆盖或新建）
+                self.progress.emit("正在保存报告...")
+                report_path = self._save_reports()
+                self.progress_percent.emit(100)
+                self.progress.emit("任务完成！")
+                self.finished.emit(report_path)
 
         except Exception as e:
             error_msg = f"后台任务出错: {e}\n{traceback.format_exc()}"
@@ -146,50 +157,10 @@ class RefreshWorker(QThread):
         today = datetime.date.today().isoformat()
         date_file = f"reports/{today}.md"
 
-        # 构建报告内容
-        content = self._generate_report_content()
-
-        # 写入日期文件（覆盖）
-        with open(date_file, "w", encoding="utf-8") as f:
-            f.write(content)
+        # 使用 report_generator 写入报告
+        report_generator.write_report(self.papers, date_file)
 
         return date_file
-
-    def _generate_report_content(self) -> str:
-        """根据 self.papers 生成 Markdown 报告内容"""
-        # 按类别分组
-        categories = {}
-        for paper in self.papers:
-            cat = paper["category"]
-            categories.setdefault(cat, []).append(paper)
-
-        lines = []
-        today = datetime.date.today().isoformat()
-        lines.append(f"# 每日论文报告 ({today})\n\n")
-
-        for cat in sorted(categories.keys()):
-            lines.append(f"## {cat}\n\n")
-            for paper in categories[cat]:
-                title = paper["title"]
-                link = paper["link"]
-                authors = ", ".join(paper["authors"][:5])
-                if len(paper["authors"]) > 5:
-                    authors += " 等"
-                date = paper["date"]
-                abstract = paper["abstract"].replace("\n", " ")
-                summary = paper.get("summary", "")
-
-                lines.append(f"### [{title}]({link})\n")
-                lines.append(f"- **作者**: {authors}\n")
-                lines.append(f"- **日期**: {date}\n")
-                lines.append(f"- **摘要**: {abstract[:300]}...\n")
-                if summary:
-                    lines.append(f"- **中文总结**:\n{summary}\n")
-                else:
-                    lines.append(f"- **中文总结**: (生成失败)\n")
-                lines.append("\n")
-
-        return "".join(lines)
 
 
 class LogSignalHandler(logging.Handler):
@@ -205,6 +176,138 @@ class LogSignalHandler(logging.Handler):
             self.signal.emit(msg)
         except Exception:
             pass
+
+
+class UserSearchWorker(QThread):
+    """执行用户检索任务的工作线程"""
+
+    # 信号定义
+    progress = pyqtSignal(str)          # 进度消息
+    progress_percent = pyqtSignal(int)  # 进度百分比 (0-100)
+    finished = pyqtSignal(list, str)    # 任务完成，参数为论文列表和报告文件路径
+    error = pyqtSignal(str)             # 错误消息
+
+    def __init__(self, keywords, filter_days, start_date=None, end_date=None):
+        super().__init__()
+        self.keywords = keywords
+        self.filter_days = filter_days
+        self.start_date = start_date
+        self.end_date = end_date
+        self.papers: List[Dict[str, Any]] = []
+        self._original_stdout = None
+        self._original_stderr = None
+        self._log_handler = None
+
+    def run(self):
+        """线程主函数"""
+        try:
+            self._setup_output_redirection()
+
+            self.progress.emit("正在加载配置...")
+            cfg = config.load_config()
+            self.progress_percent.emit(5)
+
+            # 爬取论文
+            all_papers = []
+            total_keywords = len(self.keywords)
+            for i, keyword in enumerate(self.keywords):
+                self.progress.emit(f"正在检索关键词 '{keyword}'...")
+                if self.start_date and self.end_date:
+                    papers = scraper.fetch_papers(keyword, None, cfg,
+                                                  start_date=self.start_date,
+                                                  end_date=self.end_date)
+                else:
+                    papers = scraper.fetch_papers(keyword, self.filter_days, cfg)
+                all_papers.extend(papers)
+                self.progress_percent.emit(5 + int((i + 1) / total_keywords * 30))
+                self.progress.emit(f"已检索 '{keyword}'，找到 {len(papers)} 篇论文")
+
+            # 过滤 Remote Sensing
+            self.progress.emit("正在过滤 Remote Sensing 论文...")
+            all_papers = scraper.filter_remote_sensing(all_papers, cfg)
+            # 黑名单过滤
+            all_papers = scraper.filter_blacklist(all_papers, cfg)
+            # 去重
+            all_papers = scraper.deduplicate_papers(all_papers)
+            self.progress_percent.emit(40)
+
+            if not all_papers:
+                self.progress.emit("检索完成，无结果")
+                self.finished.emit([], "")
+                return
+
+            self.progress.emit(f"找到 {len(all_papers)} 篇论文，正在生成摘要...")
+            # 生成摘要
+            summarized_papers = summarizer.batch_summarize(all_papers)
+            self.papers = summarized_papers
+            self.progress_percent.emit(70)
+
+            # 生成报告内容
+            report_content = report_generator.generate_report_content(summarized_papers, cfg)
+
+            # 保存报告文件
+            user_reports_dir = Path("reports/user")
+            user_reports_dir.mkdir(parents=True, exist_ok=True)
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+            filename = f"{timestamp}.md"
+            report_path = user_reports_dir / filename
+            with open(report_path, "w", encoding="utf-8") as f:
+                f.write(report_content)
+
+            self.progress_percent.emit(100)
+            self.progress.emit("任务完成！")
+            self.finished.emit(summarized_papers, str(report_path))
+
+        except Exception as e:
+            error_msg = f"用户检索任务出错: {e}\n{traceback.format_exc()}"
+            self.error.emit(error_msg)
+        finally:
+            self._restore_output_redirection()
+
+    def _setup_output_redirection(self):
+        """重定向 stdout/stderr 和日志到进度信号。"""
+        # 与 RefreshWorker 相同
+        self._original_stdout = sys.stdout
+        self._original_stderr = sys.stderr
+
+        class EmittingStream:
+            def __init__(self, signal, original_stdout):
+                self.signal = signal
+                self.original_stdout = original_stdout
+
+            def write(self, text):
+                self.original_stdout.write(text)
+                lines = text.rstrip('\n').split('\n')
+                for line in lines:
+                    if line.strip():
+                        self.signal.emit(line)
+                return len(text)
+
+            def flush(self):
+                pass
+
+        self._emitting_stream = EmittingStream(self.progress, self._original_stdout)
+        sys.stdout = self._emitting_stream
+        sys.stderr = self._emitting_stream
+
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.INFO)
+        self._log_handler = LogSignalHandler(self.progress)
+        self._log_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(name)s: %(message)s')
+        self._log_handler.setFormatter(formatter)
+        root_logger.addHandler(self._log_handler)
+
+    def _restore_output_redirection(self):
+        """恢复原始 stdout/stderr 并移除日志处理器。"""
+        if self._original_stdout:
+            sys.stdout = self._original_stdout
+        if self._original_stderr:
+            sys.stderr = self._original_stderr
+        if self._log_handler:
+            root_logger = logging.getLogger()
+            root_logger.removeHandler(self._log_handler)
+            self._log_handler = None
 
 
 if __name__ == "__main__":
@@ -223,5 +326,5 @@ if __name__ == "__main__":
             "category": "Gaussian Splatting",
         }
     ]
-    content = worker._generate_report_content()
+    content = report_generator.generate_report_content(worker.papers)
     print(content[:200])

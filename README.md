@@ -1,6 +1,8 @@
 # ARXIV-DAILY
 > **"Let LLM read papers for you."** > 一个为了应对导师 Push、拯救发际线而写的论文速递机器人。
 
+[![观看视频](https://img.youtube.com/vi/l2cTtlb5u8E/maxresdefault.jpg)](https://youtu.be/l2cTtlb5u8E)
+
 ![Python](https://img.shields.io/badge/Python-3.9%2B-blue) ![DeepSeek](https://img.shields.io/badge/AI-LLM%20-purple) ![License](https://img.shields.io/badge/License-GPL3.0-green)
 
 一个自动化机器人，每天抓取设定好的关键词的最新论文，利用 **硅基流动 (SiliconFlow)等OpenAI API兼容的** 的 API 生成中文摘要，并更新到 Markdown 文档。同时提供现代化的 **PyQt6 桌面 GUI**，方便交互式浏览和配置。
@@ -42,7 +44,8 @@
 ├── run_gui.py             # GUI 启动脚本
 ├── gui_main.py            # 主窗口 UI 和逻辑
 ├── gui_worker.py          # 后台工作线程（爬虫+摘要）
-├── gui_config.py          # 配置文件管理（JSON 读写）
+├── config.py              # 配置文件管理（JSON 读写，原 gui_config.py）
+├── report_generator.py    # 共享报告生成模块（避免重复代码）
 ├── gui_markdown.py        # Markdown/LaTeX 渲染引擎
 ├── gui_chat.py            # 右侧 AI 聊天组件
 ├── requirements.txt       # Python 依赖
@@ -113,6 +116,8 @@ GUI 启动后，你可以：
 - **Model ID**：模型标识（默认 `deepseek-ai/DeepSeek-V3.2`）。
 - **Custom Prompt**：自定义摘要生成提示词（支持多行）。
 - **Keywords**：搜索关键词，逗号或换行分隔（例如 `Gaussian Splatting, Remote Sensing`）。
+- **Additional Keywords**：附加关键词（原 Remote Sensing Keywords），用于过滤 Remote Sensing 类论文。
+- **Blacklist Keywords**：黑名单关键词，排除包含这些关键词的论文。
 
 设置将自动保存，下次启动时生效。
 
@@ -153,4 +158,17 @@ GUI 启动后，你可以：
 - Remote Sensing 论文过滤规则可在 `scraper.py` 中调整。
 - GUI 依赖 PyQt6，确保已安装（通过 requirements.txt 安装）。
 
+## 代码整理与优化
 
+本项目经过代码整理整合，旨在提高代码效率、避免冗余重复，同时保持原有功能完好无损。主要改进包括：
+
+- **合并重复功能**：将 `main.py` 和 `gui_worker.py` 中的报告生成逻辑提取到共享模块 `report_generator.py`，确保一致性。
+- **分离易污染模块**：将配置管理从 `gui_config.py` 重命名为 `config.py`，并更新字段名（`REMOTE_SENSING_KEYWORDS` → `ADDITIONAL_KEYWORDS`），同时保持向后兼容。
+- **优化导入结构**：消除循环依赖，统一配置加载方式。
+- **保持用户配置灵活性**：`config.json` 配置文件允许用户自行填写 BaseURL、modelid、apikey、keywords、prompt、additional keywords、blacklist keywords 等字段，无需修改代码。
+
+重构后的代码结构更清晰，易于维护和扩展，同时确保 CLI 和 GUI 功能完全正常。
+
+## 许可证
+
+本项目采用 GPL-3.0 许可证。详情请见 [LICENSE](LICENSE) 文件。

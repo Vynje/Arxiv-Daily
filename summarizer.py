@@ -2,7 +2,7 @@ import openai
 import time
 import logging
 from typing import Optional
-import gui_config
+import config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,11 +13,13 @@ def summarize_abstract(abstract: str) -> Optional[str]:
     使用硅基流动 API 生成中文摘要。
     返回格式化后的摘要字符串，如果失败则返回 None。
     """
-    cfg = gui_config.load_config()
+    cfg = config.load_config()
     base_url = cfg.get("BASE_URL", "https://api.siliconflow.cn/v1")
     model_id = cfg.get("MODEL_ID", "deepseek-ai/DeepSeek-V3.2")
     api_key = cfg.get("API_KEY", "")
     system_prompt = cfg.get("SYSTEM_PROMPT", "")
+    if not system_prompt:
+        system_prompt = config.DEFAULT_CONFIG["SYSTEM_PROMPT"]
     max_retries = cfg.get("MAX_RETRIES", 3)
     retry_delay = cfg.get("RETRY_DELAY", 2)
 

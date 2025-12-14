@@ -1,52 +1,23 @@
+#!/usr/bin/env python3
+"""
+ARXIV-DAILY 主入口点。
+
+如果 PyQt6 可用，则启动图形用户界面 (GUI)。
+否则，回退到命令行界面 (CLI) 生成报告。
+"""
 import os
+import sys
 import datetime
 from typing import List, Dict, Any
-from scraper import scrape_all
-from summarizer import batch_summarize
 
-def generate_report_content(papers: List[Dict[str, Any]]) -> str:
-    """根据论文列表生成 Markdown 报告内容"""
-    # 按类别分组
-    categories = {}
-    for paper in papers:
-        cat = paper["category"]
-        categories.setdefault(cat, []).append(paper)
+import report_generator
 
-    lines = []
-    today = datetime.date.today().isoformat()
-    lines.append(f"# 每日论文报告 ({today})\n\n")
 
-    for cat in sorted(categories.keys()):
-        lines.append(f"## {cat}\n\n")
-        for paper in categories[cat]:
-            title = paper["title"]
-            link = paper["link"]
-            authors = ", ".join(paper["authors"][:5])  # 最多显示5位作者
-            if len(paper["authors"]) > 5:
-                authors += " 等"
-            date = paper["date"]
-            abstract = paper["abstract"].replace("\n", " ")
-            summary = paper.get("summary", "")
+def cli_main():
+    """命令行界面主函数"""
+    from scraper import scrape_all
+    from summarizer import batch_summarize
 
-            lines.append(f"### [{title}]({link})\n")
-            lines.append(f"- **作者**: {authors}\n")
-            lines.append(f"- **日期**: {date}\n")
-            lines.append(f"- **摘要**: {abstract[:300]}...\n")
-            if summary:
-                lines.append(f"- **中文总结**:\n{summary}\n")
-            else:
-                lines.append(f"- **中文总结**: (生成失败)\n")
-            lines.append("\n")
-
-    return "".join(lines)
-
-def write_report(papers: List[Dict[str, Any]], report_path: str):
-    """将报告内容写入指定文件（覆盖）"""
-    content = generate_report_content(papers)
-    with open(report_path, "w", encoding="utf-8") as f:
-        f.write(content)
-
-def main():
     print("开始爬取 arXiv 论文...")
     papers = scrape_all()
     if not papers:
@@ -62,10 +33,32 @@ def main():
     report_path = f"reports/{today}.md"
 
     print("生成报告...")
-    write_report(papers, report_path)
+    report_generator.write_report(papers, report_path)
 
     print(f"完成！报告已保存至 {report_path}")
 
+def gui_main():
+    """图形用户界面主函数"""
+    try:
+        from gui_main import main as gui_entry
+        gui_entry()
+    except ImportError as e:
+        print(f"无法导入 GUI 模块: {e}")
+        print("请确保已安装 PyQt6 和相关依赖。")
+        sys.exit(1)
+
+def main():
+    # 检查是否安装了 PyQt6
+    try:
+        import PyQt6
+        # 如果用户明确要求 CLI（例如通过参数），则使用 CLI
+        if len(sys.argv) > 1 and sys.argv[1] == "--cli":
+            cli_main()
+        else:
+            gui_main()
+    except ImportError:
+        print("PyQt6 未安装，使用命令行界面 (CLI)。")
+        cli_main()
 
 if __name__ == "__main__":
     main()

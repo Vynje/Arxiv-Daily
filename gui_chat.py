@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont, QTextCursor, QColor
 
-from gui_config import get_config_value
+from config import get_config_value
 import openai
 import gui_markdown
 
@@ -53,7 +53,7 @@ class ChatWorker(QThread):
     def call_api(self, prompt: str) -> str:
         """
         调用硅基流动 API 进行聊天。
-        使用 gui_config 中的配置。
+        使用 config 中的配置。
         """
         base_url = get_config_value("BASE_URL")
         model_id = get_config_value("MODEL_ID")
